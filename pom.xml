@@ -56,10 +56,25 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-resolver-dns-native-macos</artifactId>
+			<version>4.1.122.Final</version>
+			<classifier>osx-x86_64</classifier>
+		</dependency>
+    </dependencies>
 
 	<build>
 		<plugins>
