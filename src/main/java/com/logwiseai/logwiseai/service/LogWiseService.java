@@ -1,10 +1,10 @@
 package com.logwiseai.logwiseai.service;
 
+import com.logwiseai.logwiseai.model.LogSummaryResponse;
 import com.logwiseai.logwiseai.model.LogQueryRequest;
 import com.logwiseai.logwiseai.model.LogResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -18,32 +18,44 @@ import java.util.Map;
 public class LogWiseService {
 
     private final WebClient openAiWebClient;
+
     @Value("${openai.model}")
     private String openAiModel;
 
-    public LogResponse processQuery(LogQueryRequest request) {
+    public LogSummaryResponse processQuery(LogQueryRequest request) {
         String prompt = buildPrompt(request);
 
-        String response = openAiWebClient
+        LogResponse logResponse = openAiWebClient
                 .post().bodyValue(createRequestBody(prompt))
                 .retrieve()
-                .bodyToMono(String.class)
+                .bodyToMono(LogResponse.class)
                 .block();
 
-        return new LogResponse("GPT response summary" + response, 100); // Placeholder for actual response processing
+        if (logResponse == null || logResponse.getChoices().isEmpty()) {
+            throw new RuntimeException("No response or choices from OpenAI.");
+        }
 
+        var choice = logResponse.getChoices().get(0);
+        var usage = logResponse.getUsage();
+
+        return new LogSummaryResponse(
+                choice.getMessage().getContent(),
+                choice.getFinishReason(),
+                usage.getPromptTokens(),
+                usage.getCompletionTokens(),
+                usage.getTotalTokens()
+        );
     }
 
-    private Map<String,Object> createRequestBody(String prompt) {
-        Map<String,Object> body = new HashMap<>();
+    private Map<String, Object> createRequestBody(String prompt) {
+        Map<String, Object> body = new HashMap<>();
         body.put("model", openAiModel);
 
-        List<Map<String,String>> messages = new ArrayList<>();
-        messages.add(Map.of("role","user", "content", prompt));
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(Map.of("role", "user", "content", prompt));
         body.put("messages", messages);
 
         return body;
-
     }
 
     private String buildPrompt(LogQueryRequest request) {
